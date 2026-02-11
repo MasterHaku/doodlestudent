@@ -8,10 +8,11 @@ FROM registry.access.redhat.com/ubi8/openjdk-17:1.16 AS builder
 
 WORKDIR /workspace
 
-# Copy Maven wrapper and configuration
-COPY mvnw* ./
-COPY pom.xml ./
-COPY src ./src
+# Copy entire project structure
+COPY . .
+
+# Convert line endings and make mvnw executable
+RUN sed -i 's/\r$//' ./mvnw && chmod +x ./mvnw
 
 # Build the application
 RUN ./mvnw clean package -DskipTests -q

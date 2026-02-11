@@ -33,4 +33,5 @@ services:
       - db
       - etherpad
       - mail
+      
     restart: on-failure
