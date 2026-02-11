@@ -1,17 +1,37 @@
+####
+# Multi-stage Dockerfile for Quarkus application
+# This builds the application and runs it in JVM mode for docker-compose
+####
+
+# Stage 1: Build stage
+FROM registry.access.redhat.com/ubi8/openjdk-17:1.16 AS builder
+
+WORKDIR /workspace
+
+# Copy Maven wrapper and configuration
+COPY mvnw* ./
+COPY pom.xml ./
+COPY src ./src
+
+# Build the application
+RUN ./mvnw clean package -DskipTests -q
+
+# Stage 2: Runtime stage
 FROM registry.access.redhat.com/ubi8/openjdk-17:1.16
 
 ENV LANGUAGE='en_US:en'
 
 WORKDIR /deployments
 
-COPY target/quarkus-app/lib/ ./lib/
-COPY target/quarkus-app/*.jar ./
-COPY target/quarkus-app/app/ ./app/
-COPY target/quarkus-app/quarkus/ ./quarkus/
+# Copy built artifacts from builder stage
+COPY --from=builder --chown=185 /workspace/target/quarkus-app/lib/ ./lib/
+COPY --from=builder --chown=185 /workspace/target/quarkus-app/*.jar ./
+COPY --from=builder --chown=185 /workspace/target/quarkus-app/app/ ./app/
+COPY --from=builder --chown=185 /workspace/target/quarkus-app/quarkus/ ./quarkus/
 
 EXPOSE 8080
 USER 185
 ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
-ENV JAVA_APP_JAR="quarkus-run.jar"
+ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
 
 ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]
