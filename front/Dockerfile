@@ -1,9 +1,9 @@
 
 FROM node:20-alpine AS build
 WORKDIR /doodlestudent
-COPY doodlestudent/front/package*.json ./
+COPY ./package*.json ./
 RUN npm ci
-COPY doodlestudent/front .
+COPY . .
 RUN npm run build
 
 FROM nginx:alpine
