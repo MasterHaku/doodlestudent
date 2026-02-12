@@ -15,20 +15,20 @@ quarkus:
       driver: com.mysql.cj.jdbc.Driver
   hibernate-orm:
     validate-in-dev-mode: false
-#  flyway:
-#    migrate-at-start: true
-#    baseline-on-migrate: true
+    #  flyway:
+    #    migrate-at-start: true
+    #    baseline-on-migrate: true
     database:
       generation: update
       globally-quoted-identifiers: true
   mailer:
     from: test@quarkus.io
-#    host: smtp.sendgrid.net
+    #    host: smtp.sendgrid.net
     host: mail
     port: 25
-#    port: 465
-#    ssl: true
+    #    port: 465
+    #    ssl: true
 
-#    username: ""
-#    password: ""
+    #    username: ""
+    #    password: ""
     mock: false
