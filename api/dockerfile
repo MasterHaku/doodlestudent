@@ -1,38 +1,25 @@
-####
-# Multi-stage Dockerfile for Quarkus application
-# This builds the application and runs it in JVM mode for docker-compose
-####
+# ÉTAPE 1 : Compilation
+FROM registry.access.redhat.com/ubi8/openjdk-17:1.16 AS build
+USER root
+WORKDIR /code
 
-# Stage 1: Build stage
-FROM registry.access.redhat.com/ubi8/openjdk-17:1.16 AS builder
+# On copie le wrapper
+COPY .mvn/ .mvn/
+COPY mvnw .
 
-WORKDIR /workspace
+# --- CORRECTION ICI ---
+# 1. On supprime les retours chariots Windows (\r) 
+# 2. On rend le script exécutable
+RUN tr -d '\r' < mvnw > mvnw.fixed && \
+    mv mvnw.fixed mvnw && \
+    chmod +x mvnw
+# ----------------------
 
-# Copy entire project structure
-COPY . .
+COPY pom.xml .
 
-# Convert line endings and make mvnw executable
-RUN sed -i 's/\r$//' ./mvnw && chmod +x ./mvnw
+# On télécharge les dépendances (cette couche sera mise en cache)
+RUN ./mvnw dependency:go-offline
 
-# Build the application
-RUN ./mvnw clean package -DskipTests -q
-
-# Stage 2: Runtime stage
-FROM registry.access.redhat.com/ubi8/openjdk-17:1.16
-
-ENV LANGUAGE='en_US:en'
-
-WORKDIR /deployments
-
-# Copy built artifacts from builder stage
-COPY --from=builder --chown=185 /workspace/target/quarkus-app/lib/ ./lib/
-COPY --from=builder --chown=185 /workspace/target/quarkus-app/*.jar ./
-COPY --from=builder --chown=185 /workspace/target/quarkus-app/app/ ./app/
-COPY --from=builder --chown=185 /workspace/target/quarkus-app/quarkus/ ./quarkus/
-
-EXPOSE 8080
-USER 185
-ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
-ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
-
-ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]
+# On copie les sources et on compile
+COPY src/ src/
+RUN ./mvnw package -DskipTests
