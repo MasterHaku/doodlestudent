@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   db:
-    image: mysql
+    image: mysql:8.0
     ports:
       - "3307:3306"
     environment:
@@ -9,6 +9,12 @@ services:
       - MYSQL_DATABASE=tlc
       - MYSQL_USER=tlc
       - MYSQL_PASSWORD=tlc
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   etherpad:
     image: etherpad/etherpad
     ports:
@@ -17,21 +23,31 @@ services:
       AUTHENTICATION_METHOD: "apikey"
     volumes:
       - ./api/APIKEY.txt:/opt/etherpad-lite/APIKEY.txt
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   mail:
     image: bytemark/smtp
     restart: always
     ports:
       - "2525:25"
+
   api:
     build: ./api
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      etherpad:
+        condition: service_healthy
 
   front:
     build: ./front
     ports:
-      - "80:80"
+      - "4200:80"
     depends_on:
       - api
