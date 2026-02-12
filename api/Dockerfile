@@ -1,25 +1,14 @@
-# ÉTAPE 1 : Compilation
-FROM registry.access.redhat.com/ubi8/openjdk-17:1.16 AS build
-USER root
-WORKDIR /code
+FROM eclipse-temurin:17-jdk
 
-# On copie le wrapper
-COPY .mvn/ .mvn/
-COPY mvnw .
-
-# --- CORRECTION ICI ---
-# 1. On supprime les retours chariots Windows (\r) 
-# 2. On rend le script exécutable
-RUN tr -d '\r' < mvnw > mvnw.fixed && \
-    mv mvnw.fixed mvnw && \
-    chmod +x mvnw
-# ----------------------
+WORKDIR /app
 
 COPY pom.xml .
+COPY mvnw .
+COPY .mvn .mvn
 
-# On télécharge les dépendances (cette couche sera mise en cache)
-RUN ./mvnw dependency:go-offline
-
-# On copie les sources et on compile
-COPY src/ src/
+COPY src src
 RUN ./mvnw package -DskipTests
+
+EXPOSE 8080
+
+CMD ["java", "-jar", "target/quarkus-app/quarkus-run.jar"]
