@@ -8,6 +8,8 @@ services:
       - MYSQL_PASSWORD=tlc
   etherpad:
     image: etherpad/etherpad
+    ports:
+      - "9001:9001"
     environment:
       AUTHENTICATION_METHOD: "apikey"
     volumes:
@@ -20,6 +22,10 @@ services:
   api:
     build: ./api
     image: bigchef/tlc-backend:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - PAD_EXTERNAL_URL=http://etherpad:9001/
     depends_on:
       - db
 
@@ -37,6 +43,8 @@ services:
  
   prometheus:
     image: prom/prometheus
+    ports:
+      - "9090:9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     depends_on:
@@ -44,6 +52,8 @@ services:
 
   grafana:
     image: grafana/grafana
+    ports:
+      - "3000:3000"
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
@@ -56,6 +66,11 @@ services:
       
   certbot:
     image: certbot/certbot
+    container_name: certbot
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
+    entrypoint: /bin/sh -c "certbot renew --quiet --webroot -w /var/www/certbot && while :; do sleep 86400; certbot renew --quiet --webroot -w /var/www/certbot; done"
+    depends_on:
+      - front
+    restart: always
