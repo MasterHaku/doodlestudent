@@ -1,5 +1,6 @@
 version: "3.8"
 services:
+  # mysql database service 
   db:
     image: mysql:8.0
     ports:
@@ -14,6 +15,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  # etherpad service 
 
   etherpad:
     image: etherpad/etherpad
@@ -29,12 +31,14 @@ services:
       timeout: 5s
       retries: 5
 
+  # SMTP mail service
   mail:
     image: bytemark/smtp
     restart: always
     ports:
       - "2525:25"
 
+  # Backend api service
   api:
     build: ./api
     ports:
@@ -44,7 +48,7 @@ services:
         condition: service_healthy
       etherpad:
         condition: service_healthy
-
+  # Frontend service
   front:
     build: ./front
     ports:
