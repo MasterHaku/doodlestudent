@@ -1,4 +1,6 @@
 services:
+
+  # MySQL database service 
   db:
     image: mysql
     environment:
@@ -6,6 +8,8 @@ services:
       - MYSQL_DATABASE=tlc
       - MYSQL_USER=tlc
       - MYSQL_PASSWORD=tlc
+
+  # Etherpad service     
   etherpad:
     image: etherpad/etherpad
     ports:
@@ -14,11 +18,15 @@ services:
       AUTHENTICATION_METHOD: "apikey"
     volumes:
       - ./api/APIKEY.txt:/opt/etherpad-lite/APIKEY.txt
+
+  # SMTP mail service
   mail:
     image: bytemark/smtp
     restart: always
     ports:
       - "2525:25"
+
+  # Backend api service
   api:
     build: ./api
     image: bigchef/tlc-backend:latest
@@ -29,6 +37,7 @@ services:
     depends_on:
       - db
 
+  # Frontend service
   front:
     build: ./front
     image: bigchef/tlc-frontend:latest
@@ -41,6 +50,7 @@ services:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
  
+  # Prometheus service for adventure 2
   prometheus:
     image: prom/prometheus
     ports:
@@ -50,6 +60,7 @@ services:
     depends_on:
       - api
 
+  # Grafana service for adventure 2
   grafana:
     image: grafana/grafana
     ports:
@@ -63,7 +74,8 @@ services:
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
-      
+  
+  # Certbot service
   certbot:
     image: certbot/certbot
     container_name: certbot

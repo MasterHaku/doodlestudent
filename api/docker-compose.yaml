@@ -1,6 +1,6 @@
 version: "3.8"
 services:
-  # mysql database service 
+  # MySQL database service 
   db:
     image: mysql:8.0
     ports:
@@ -15,7 +15,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-  # etherpad service 
+  # Etherpad service 
 
   etherpad:
     image: etherpad/etherpad
@@ -38,7 +38,7 @@ services:
     ports:
       - "2525:25"
 
-  # Backend api service
+  # Backend API service
   api:
     build: ./api
     ports:
