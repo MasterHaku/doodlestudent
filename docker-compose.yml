@@ -35,8 +35,12 @@ services:
     image: bigchef/tlc-frontend:latest
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - api
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
 
   prometheus:
     image: prom/prometheus
@@ -60,3 +64,9 @@ services:
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
+      
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
